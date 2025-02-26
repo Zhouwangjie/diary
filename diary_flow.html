@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间流</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        .nav-links {
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .nav-links a {
+            margin-right: 0;
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+        }
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+        .diary-container {
+            margin-left: 120px;
+            margin-top: 20px;
+        }
+        .diary-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .diary-date {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .diary-content {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .diary-time {
+            color: #999;
+            font-size: 0.9em;
+        }
+        .diary-agent {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            color: #4CAF50;
+        }
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+        }
+        .status-red {
+            background-color: #ff6b6b;
+        }
+        .status-blue {
+            background-color: #4dabf7;
+        }
+        .status-gray {
+            background-color: #adb5bd;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-links">
+        <a href="index.html">写日记</a>
+        <a href="diary_flow.html">时间流</a>
+        <a href="#">时间格</a>
+        <a href="#">信箱</a>
+    </div>
+
+    <div class="diary-container" id="diaryContainer"></div>
+
+    <script>
+        // 格式化时间函数
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        // 格式化写作时长
+        function formatDuration(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}分${remainingSeconds}秒`;
+        }
+
+        // 获取并显示日记内容
+        function fetchDiaries() {
+            fetch('http://localhost:5000/diary')
+                .then(response => response.json())
+                .then(diaries => {
+                    const container = document.getElementById('diaryContainer');
+                    container.innerHTML = '';
+
+                    diaries.forEach((diary, index) => {
+                        // console.log(`日记 ${index + 1} - emotion值: ${diary.emotion}`);
+                        const card = document.createElement('div');
+                        card.className = 'diary-card';
+
+                        // 添加状态指示器
+                        const statusIndicator = document.createElement('div');
+                        const emotionValue = Number(diary.emotion);
+                        statusIndicator.className = 'status-indicator ' + 
+                            (emotionValue === 2 ? 'status-red' : 
+                             emotionValue === 1 ? 'status-blue' : 
+                             'status-gray');
+                        card.appendChild(statusIndicator);
+
+                        const date = document.createElement('div');
+                        date.className = 'diary-date';
+                        date.textContent = formatDate(diary.created_time);
+                        card.appendChild(date);
+
+                        const content = document.createElement('div');
+                        content.className = 'diary-content';
+                        content.textContent = diary.content;
+                        card.appendChild(content);
+
+                        const time = document.createElement('div');
+                        time.className = 'diary-time';
+                        time.textContent = `写作时长：${formatDuration(diary.time)}`;
+                        card.appendChild(time);
+
+                        if (diary.agent_content) {
+                            const agent = document.createElement('div');
+                            agent.className = 'diary-agent';
+                            agent.textContent = diary.agent_content;
+                            card.appendChild(agent);
+                        }
+
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('获取日记失败：', error);
+                });
+        }
+
+        // 页面加载时获取日记
+        document.addEventListener('DOMContentLoaded', fetchDiaries);
+    </script>
+</body>
+</html>
