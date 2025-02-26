@@ -4,126 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>倒计时写作</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-        }
-        .nav-links {
-            position: fixed;
-            top: 0;
-            left: 0;
-            margin: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        .nav-links a {
-            margin-right: 0;
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: bold;
-            display: block;
-        }
-        .timer-container {
-            margin-left: 120px;
-            margin-top: 20px;
-        }
-        .content-container {
-            margin-left: 120px;
-            position: relative;
-            margin-top: 20px;
-        }
-        .timer-container {
-            margin-top: 60px;
-        }
-        .nav-links a {
-            margin-right: 15px;
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-        .timer-container {
-            margin: 20px 0;
-        }
-        .time-display {
-            display: inline-block;
-            margin-left: 15px;
-            font-size: 1.2em;
-            color: #666;
-            vertical-align: middle;
-        }
-        .content-container {
-            position: relative;
-            margin: 20px 0;
-        }
-        #content {
-            width: 100%;
-            height: 300px;
-            padding: 10px;
-            resize: vertical;
-            box-sizing: border-box;
-        }
-        #wordCount {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            color: #666;
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 2px 5px;
-            border-radius: 3px;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            width: 300px;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .time-input {
-            margin: 10px 0;
-            padding: 5px;
-            width: 60px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="nav-links">
+        <a href="index.html" class="active">写日记</a>
+        <a href="diary_flow.html">时间流</a>
+        <a href="index.html">时间格</a>
+        <a href="index.html">信箱</a>
+    </div>
+
     <div class="timer-container">
         <button id="startBtn">开始写作</button>
         <div id="timeDisplay" class="time-display">00:00</div>
     </div>
     
-    <div class="nav-links">
-        <a href="index.html">写日记</a>
-        <a href="diary_flow.html">时间流</a>
-        <a href="#">时间格</a>
-        <a href="#">信箱</a>
-    </div>
-
     <div class="content-container">
         <textarea id="content" disabled maxlength="2000" placeholder="点击开始写作后在这里输入文字..."></textarea>
         <div id="wordCount">0/2000</div>
-        <button id="submitBtn" style="display: block; margin: 10px 0; padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">提交</button>
+        <button id="submitBtn">提交</button>
     </div>
 
     <script>
@@ -150,6 +49,7 @@
                 isWriting = true;
                 textarea.disabled = false;
                 startBtn.textContent = '写作中...';
+                startBtn.classList.add('writing');  // 添加写作中的样式
                 startWritingTime = new Date();
                 elapsedTime = 0;
                 updateDisplay();
@@ -166,6 +66,7 @@
                 isWriting = false;
                 textarea.disabled = true;
                 startBtn.textContent = '开始写作';
+                startBtn.classList.remove('writing');  // 移除写作中的样式
             }
         }
 

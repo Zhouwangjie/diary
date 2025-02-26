@@ -1,0 +1,233 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    background-color: #ffffff;
+    color: rgb(55, 53, 47);
+    line-height: 1.5;
+}
+
+/* 导航栏样式 */
+.nav-links {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.nav-links a {
+    margin-right: 0;
+    color: rgba(55, 53, 47, 0.65);
+    text-decoration: none;
+    font-size: 14px;
+    padding: 6px 8px;
+    border-radius: 3px;
+    transition: all 0.1s ease-in-out;
+}
+
+.nav-links a:hover {
+    background-color: rgba(55, 53, 47, 0.08);
+    text-decoration: none;
+}
+
+.nav-links a.active {
+    color: rgb(68, 187, 85);
+    background-color: rgba(68, 187, 85, 0.1);
+}
+
+/* 写作页面样式 */
+.timer-container {
+    margin-left: 120px;
+    margin-top: 20px;
+}
+
+.content-container {
+    margin-left: 120px;
+    position: relative;
+    margin-top: 20px;
+}
+
+.time-display {
+    display: inline-block;
+    margin-left: 15px;
+    font-size: 14px;
+    color: rgb(55, 53, 47);
+    vertical-align: middle;
+}
+
+#content {
+    width: 100%;
+    min-height: 400px;
+    padding: 16px;
+    resize: vertical;
+    box-sizing: border-box;
+    border: 1px solid rgba(55, 53, 47, 0.16);
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 16px;
+    line-height: 1.5;
+    color: rgb(55, 53, 47);
+    background-color: #ffffff;
+}
+
+#content:focus {
+    outline: none;
+    border-color: rgb(46, 170, 220);
+}
+
+#content:disabled {
+    background-color: rgba(242, 241, 238, 0.6);
+    cursor: not-allowed;
+}
+
+#wordCount {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    color: rgba(55, 53, 47, 0.65);
+    font-size: 12px;
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 3px;
+}
+
+/* 按钮样式 */
+#startBtn {
+    background-color: rgb(235, 87, 87);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.1s ease-in-out;
+}
+
+#startBtn:hover {
+    background-color: rgb(224, 49, 49);
+}
+
+#startBtn.writing {
+    background-color: rgb(235, 235, 235);
+    color: rgb(55, 53, 47);
+    cursor: not-allowed;
+}
+
+#submitBtn {
+    display: block;
+    background-color: rgb(68, 187, 85);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.1s ease-in-out;
+    margin-top: 12px;
+}
+
+#submitBtn:hover {
+    background-color: rgb(52, 168, 68);
+}
+
+#submitBtn:disabled {
+    background-color: rgb(235, 235, 235);
+    color: rgb(55, 53, 47);
+    cursor: not-allowed;
+}
+
+/* 模态框样式 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 300px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.time-input {
+    margin: 10px 0;
+    padding: 5px;
+    width: 60px;
+}
+
+/* 日记流页面样式 */
+.diary-container {
+    margin-left: 120px;
+    margin-top: 20px;
+}
+
+.diary-card {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.diary-date {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.diary-content {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.diary-time {
+    color: #999;
+    font-size: 0.9em;
+}
+
+.diary-agent {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    color: #4CAF50;
+}
+
+.status-indicator {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+}
+
+.status-red {
+    background-color: #ff6b6b;
+}
+
+.status-blue {
+    background-color: #4dabf7;
+}
+
+.status-gray {
+    background-color: #adb5bd;
+} 

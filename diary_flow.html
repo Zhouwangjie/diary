@@ -4,95 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>时间流</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-        }
-        .nav-links {
-            position: fixed;
-            top: 0;
-            left: 0;
-            margin: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background-color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        .nav-links a {
-            margin-right: 0;
-            color: #4CAF50;
-            text-decoration: none;
-            font-weight: bold;
-            display: block;
-        }
-        .nav-links a:hover {
-            text-decoration: underline;
-        }
-        .diary-container {
-            margin-left: 120px;
-            margin-top: 20px;
-        }
-        .diary-card {
-            background-color: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-        .diary-date {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        .diary-content {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        .diary-time {
-            color: #999;
-            font-size: 0.9em;
-        }
-        .diary-agent {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-            color: #4CAF50;
-        }
-        .status-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 40px;
-            border-radius: 5px;
-        }
-        .status-red {
-            background-color: #ff6b6b;
-        }
-        .status-blue {
-            background-color: #4dabf7;
-        }
-        .status-gray {
-            background-color: #adb5bd;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="nav-links">
         <a href="index.html">写日记</a>
-        <a href="diary_flow.html">时间流</a>
-        <a href="#">时间格</a>
-        <a href="#">信箱</a>
+        <a href="diary_flow.html" class="active">时间流</a>
+        <a href="index.html">时间格</a>
+        <a href="index.html">信箱</a>
     </div>
 
     <div class="diary-container" id="diaryContainer"></div>
