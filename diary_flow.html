@@ -10,8 +10,31 @@
     <div class="nav-links">
         <a href="index.html">写日记</a>
         <a href="diary_flow.html" class="active">时间流</a>
-        <a href="index.html">时间格</a>
-        <a href="index.html">信箱</a>
+        <a href="time_grid.html">时间格</a>
+        <a href="inbox.html">信箱</a>
+    </div>
+
+    <!-- 添加确认弹框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>确认删除</h3>
+            <p>确定要删除这条日记吗？</p>
+            <div class="modal-buttons">
+                <button id="confirmDelete" class="danger-btn">删除</button>
+                <button id="cancelDelete" class="normal-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加成功提示弹框 -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-content">
+            <div class="success-icon">✓</div>
+            <h3>删除成功</h3>
+            <div class="modal-buttons">
+                <button class="success-btn" onclick="closeSuccessModal()">确定</button>
+            </div>
+        </div>
     </div>
 
     <div class="diary-container" id="diaryContainer"></div>
@@ -34,6 +57,67 @@
             return `${minutes}分${remainingSeconds}秒`;
         }
 
+        // 显示确认弹框
+        function showConfirmModal(diaryId, callback) {
+            const modal = document.getElementById('confirmModal');
+            const confirmBtn = document.getElementById('confirmDelete');
+            const cancelBtn = document.getElementById('cancelDelete');
+
+            modal.style.display = 'block';
+
+            confirmBtn.onclick = async () => {
+                modal.style.display = 'none';
+                await callback(diaryId);
+            };
+
+            cancelBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            // 点击弹框外部关闭
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // 显示成功提示
+        function showSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.style.display = 'block';
+            
+            // 1.5秒后自动关闭
+            setTimeout(() => {
+                closeSuccessModal();
+            }, 1500);
+        }
+
+        // 关闭成功提示
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.style.display = 'none';
+        }
+
+        // 删除日记
+        async function deleteDiary(diaryId) {
+            try {
+                const response = await fetch(`http://localhost:5000/diary/${diaryId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.message) {
+                    showSuccessModal(); // 使用新的成功提示
+                    fetchDiaries(); // 重新加载日记列表
+                } else {
+                    showAlert('删除失败：' + data.error);
+                }
+            } catch (error) {
+                console.error('删除失败：', error);
+                showAlert('删除失败，请重试');
+            }
+        }
+
         // 获取并显示日记内容
         function fetchDiaries() {
             fetch('http://localhost:5000/diary')
@@ -43,7 +127,6 @@
                     container.innerHTML = '';
 
                     diaries.forEach((diary, index) => {
-                        // console.log(`日记 ${index + 1} - emotion值: ${diary.emotion}`);
                         const card = document.createElement('div');
                         card.className = 'diary-card';
 
@@ -56,19 +139,84 @@
                              'status-gray');
                         card.appendChild(statusIndicator);
 
+                        // 添加删除按钮
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.innerHTML = '删除';
+                        deleteBtn.onclick = () => {
+                            showConfirmModal(diary.id, deleteDiary);
+                        };
+                        card.appendChild(deleteBtn);
+
                         const date = document.createElement('div');
                         date.className = 'diary-date';
                         date.textContent = formatDate(diary.created_time);
-                        card.appendChild(date);
 
                         const content = document.createElement('div');
                         content.className = 'diary-content';
                         content.textContent = diary.content;
-                        card.appendChild(content);
+
+                        const toggleBtn = document.createElement('div');
+                        toggleBtn.className = 'toggle-btn';
+                        toggleBtn.textContent = '展开';
+                        toggleBtn.style.display = 'none'; // 默认隐藏按钮
+
+                        // 修改检测内容高度的函数
+                        function checkContentHeight() {
+                            // 获取一行的高度
+                            const lineHeight = parseInt(window.getComputedStyle(content).lineHeight);
+                            // 获取实际内容高度
+                            const height = content.scrollHeight;
+                            // 获取内容宽度
+                            const width = content.offsetWidth;
+                            
+                            // 创建一个临时元素来测量单行文本的宽度
+                            const testDiv = document.createElement('div');
+                            testDiv.style.position = 'absolute';
+                            testDiv.style.visibility = 'hidden';
+                            testDiv.style.width = width + 'px';
+                            testDiv.style.whiteSpace = 'nowrap';
+                            testDiv.textContent = content.textContent;
+                            document.body.appendChild(testDiv);
+                            
+                            // 如果内容宽度超过容器宽度，说明会换行
+                            const needsExpand = testDiv.scrollWidth > width;
+                            document.body.removeChild(testDiv);
+
+                            // 只有当内容会换行时才显示展开按钮
+                            if (needsExpand) {
+                                toggleBtn.style.display = 'block';
+                                content.style.cursor = 'pointer';
+                            } else {
+                                toggleBtn.style.display = 'none';
+                                content.style.cursor = 'default';
+                                content.onclick = null; // 移除点击事件
+                            }
+                        }
+
+                        // 展开/收起切换功能
+                        let isExpanded = false;
+                        toggleBtn.onclick = (e) => {
+                            e.stopPropagation(); // 阻止事件冒泡
+                            isExpanded = !isExpanded;
+                            content.classList.toggle('expanded');
+                            toggleBtn.textContent = isExpanded ? '收起' : '展开';
+                        };
+
+                        // 点击内容也可以展开/收起
+                        content.onclick = () => {
+                            isExpanded = !isExpanded;
+                            content.classList.toggle('expanded');
+                            toggleBtn.textContent = isExpanded ? '收起' : '展开';
+                        };
 
                         const time = document.createElement('div');
                         time.className = 'diary-time';
                         time.textContent = `写作时长：${formatDuration(diary.time)}`;
+
+                        card.appendChild(date);
+                        card.appendChild(content);
+                        card.appendChild(toggleBtn);
                         card.appendChild(time);
 
                         if (diary.agent_content) {
@@ -77,6 +225,9 @@
                             agent.textContent = diary.agent_content;
                             card.appendChild(agent);
                         }
+
+                        // 在内容渲染完成后检查是否需要显示展开按钮
+                        setTimeout(checkContentHeight, 0);
 
                         container.appendChild(card);
                     });

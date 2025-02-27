@@ -145,6 +145,18 @@ body {
     cursor: not-allowed;
 }
 
+/* 添加禁用状态的按钮样式 */
+#startBtn.disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+#startBtn.disabled:hover {
+    background-color: #ccc;
+    transform: none;
+}
+
 /* 模态框样式 */
 .modal {
     display: none;
@@ -154,15 +166,16 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
 }
 
 .modal-content {
     background-color: white;
     margin: 15% auto;
-    padding: 20px;
-    width: 300px;
-    border-radius: 5px;
-    text-align: center;
+    padding: 30px;
+    width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .time-input {
@@ -184,6 +197,11 @@ body {
     margin-bottom: 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: relative;
+    transition: all 0.2s ease;
+}
+
+.diary-card:hover {
+    transform: translateX(-10px);
 }
 
 .diary-date {
@@ -197,6 +215,16 @@ body {
     color: #666;
     line-height: 1.6;
     margin-bottom: 15px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.diary-content.expanded {
+    -webkit-line-clamp: unset;
+    white-space: pre-wrap;
 }
 
 .diary-time {
@@ -230,4 +258,486 @@ body {
 
 .status-gray {
     background-color: #adb5bd;
+}
+
+/* 时间格页面样式 */
+.grid-container {
+    margin-left: 120px;
+    margin-top: 20px;
+    padding: 20px;
+}
+
+.month-grid {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.month-title-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.month-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: rgb(55, 53, 47);
+    margin-bottom: 0;
+}
+
+.collect-btn {
+    padding: 8px 16px;
+    background-color: rgb(46, 170, 220);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.collect-btn:hover {
+    background-color: rgb(35, 131, 226);
+}
+
+.days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.day-header {
+    text-align: center;
+    font-size: 14px;
+    color: rgba(55, 53, 47, 0.6);
+    padding: 8px 0;
+}
+
+.day-cell {
+    aspect-ratio: 1;
+    border: 1px solid rgba(55, 53, 47, 0.16);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: rgb(55, 53, 47);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.day-cell:hover {
+    background-color: rgba(55, 53, 47, 0.08);
+}
+
+.day-cell.empty {
+    border: none;
+    cursor: default;
+}
+
+.day-cell.empty:hover {
+    background-color: transparent;
+}
+
+.day-cell.has-diary {
+    border: none;
+    color: white;
+}
+
+.day-cell.emotion-red {
+    background-color: rgb(235, 87, 87);
+}
+
+.day-cell.emotion-blue {
+    background-color: rgb(46, 170, 220);
+}
+
+.day-cell.emotion-gray {
+    background-color: rgb(155, 155, 155);
+}
+
+/* 删除按钮样式 */
+.delete-btn {
+    position: absolute;
+    top: 50%;
+    right: -60px;
+    transform: translateY(-50%);
+    padding: 8px 16px;
+    background-color: transparent;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    opacity: 0;
+}
+
+.diary-card:hover .delete-btn {
+    opacity: 1;
+    right: -50px;
+}
+
+.delete-btn:hover {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+/* 确认弹框按钮样式 */
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.modal-buttons button {
+    min-width: 80px;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+/* 弹框标题左对齐 */
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #333;
+    font-size: 20px;
+    text-align: left;
+}
+
+/* 弹框内容左对齐 */
+.modal-content p {
+    white-space: pre-line;
+    line-height: 1.6;
+    color: #333;
+    margin: 16px 0;
+    text-align: left;
+}
+
+/* 信箱页面样式 */
+.inbox-container {
+    margin-left: 120px;
+    margin-top: 20px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.letter-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-left: 4px solid;
+    position: relative;
+}
+
+.letter-card.emotion-red {
+    border-left-color: rgb(235, 87, 87);
+}
+
+.letter-card.emotion-blue {
+    border-left-color: rgb(46, 170, 220);
+}
+
+.letter-card.emotion-gray {
+    border-left-color: rgb(155, 155, 155);
+}
+
+.letter-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.letter-date {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.letter-month {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.letter-preview {
+    color: #666;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* 信件详情弹窗样式 */
+.letter-modal {
+    width: 600px;
+    max-width: 90%;
+    padding: 0;
+}
+
+.letter-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+}
+
+.letter-header h3 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.close-btn {
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 0 10px;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.letter-body {
+    padding: 30px;
+    line-height: 1.8;
+    color: #333;
+    max-height: 60vh;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.letter-body p {
+    margin: 0;
+    text-align: left;
+    white-space: pre-wrap;
+}
+
+.letter-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    color: #666;
+    font-size: 0.9em;
+    text-align: left;
+}
+
+/* 加载动画样式 */
+.loading-modal {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.loading-content {
+    background: none;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* 成功提示样式优化 */
+.success-content {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.success-icon {
+    color: #52c41a;
+    font-size: 48px;
+    animation: fadeInUp 0.3s ease;
+}
+
+.success-content h3 {
+    margin: 0;
+    color: #333;
+    font-size: 20px;
+    animation: fadeInUp 0.3s ease 0.1s;
+    text-align: center;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 调整成功提示框的宽度 */
+.success-modal .modal-content {
+    width: 600px;
+    max-width: 90%;
+}
+
+/* 添加展开/收起按钮样式 */
+.toggle-btn {
+    color: #2E9AFE;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 15px;
+}
+
+.toggle-btn:hover {
+    color: #0066CC;
+}
+
+/* 单个按钮时的样式 */
+.modal-buttons:only-child {
+    margin-top: 24px;
+}
+
+.modal-buttons .normal-btn:only-child {
+    min-width: 100px;
+}
+
+/* 调整删除按钮在信箱卡片中的位置 */
+.letter-card .delete-btn {
+    position: absolute;
+    top: 50%;
+    right: -60px;
+    transform: translateY(-50%);
+    padding: 8px 16px;
+    background-color: transparent;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    opacity: 0;
+}
+
+.letter-card:hover .delete-btn {
+    opacity: 1;
+    right: -50px;
+}
+
+.letter-card .delete-btn:hover {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+/* 错误提示样式 */
+.error-message {
+    color: #ff6b6b;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+/* 按钮基础样式 */
+.modal-buttons button {
+    min-width: 80px;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+/* 主要按钮样式 */
+.primary-btn {
+    background-color: #2E9AFE;
+    color: white;
+}
+
+.primary-btn:hover {
+    background-color: #2589e5;
+}
+
+/* 危险按钮样式 */
+.danger-btn {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+.danger-btn:hover {
+    background-color: #fa5252;
+}
+
+/* 普通按钮样式 */
+.normal-btn {
+    background-color: #f1f3f5;
+    color: #495057;
+}
+
+.normal-btn:hover {
+    background-color: #e9ecef;
+}
+
+/* 成功按钮样式 */
+.success-btn {
+    background-color: #52c41a;
+    color: white;
+}
+
+.success-btn:hover {
+    background-color: #49ad17;
+}
+
+/* 按钮组样式 */
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* 确认删除框内容左对齐 */
+.confirm-content h3,
+.confirm-content p {
+    text-align: left;
+}
+
+/* 日记详情内容左对齐 */
+.diary-detail p {
+    text-align: left;
+    white-space: pre-wrap;
 } 

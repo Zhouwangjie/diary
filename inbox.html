@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>信箱</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="nav-links">
+        <a href="index.html">写日记</a>
+        <a href="diary_flow.html">时间流</a>
+        <a href="time_grid.html">时间格</a>
+        <a href="inbox.html" class="active">信箱</a>
+    </div>
+
+    <!-- 信件详情弹窗 -->
+    <div id="letterModal" class="modal">
+        <div class="modal-content letter-modal">
+            <div class="letter-header">
+                <h3 id="letterDate"></h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="letter-body">
+                <p id="letterContent"></p>
+            </div>
+            <div class="letter-footer">
+                <div id="letterDays"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加确认弹框 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>确认删除</h3>
+            <p>确定要删除这封信吗？</p>
+            <div class="modal-buttons">
+                <button id="confirmDelete" class="danger-btn">删除</button>
+                <button id="cancelDelete" class="normal-btn">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加成功提示弹框 -->
+    <div id="successModal" class="modal">
+        <div class="modal-content success-content">
+            <div class="success-icon">✓</div>
+            <h3>删除成功</h3>
+            <div class="modal-buttons">
+                <button class="success-btn" onclick="closeSuccessModal()">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="inbox-container" id="inboxContainer">
+        <!-- 信件卡片会通过 JavaScript 动态生成 -->
+    </div>
+
+    <script>
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 获取月份名称和年份
+        function getMonthAndYear(month, createTime) {
+            const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
+                              "七月", "八月", "九月", "十月", "十一月", "十二月"];
+            const date = new Date(createTime);
+            const year = date.getFullYear();
+            return `${monthNames[month - 1]} ${year}`;
+        }
+
+        // 获取情绪对应的类名
+        function getEmotionClass(emotion) {
+            if (emotion === 2) return 'emotion-red';
+            if (emotion === 1) return 'emotion-blue';
+            return 'emotion-gray';
+        }
+
+        // 显示信件详情
+        function showLetter(letter) {
+            const modal = document.getElementById('letterModal');
+            const dateElem = document.getElementById('letterDate');
+            const contentElem = document.getElementById('letterContent');
+            const daysElem = document.getElementById('letterDays');
+
+            dateElem.textContent = `${getMonthAndYear(letter.month, letter.create_time)}的来信`;
+            contentElem.textContent = letter.content;
+            daysElem.textContent = `写信时间：${formatDate(letter.create_time)}`;
+
+            modal.style.display = 'block';
+
+            // 关闭按钮事件
+            const closeBtn = document.querySelector('.close-btn');
+            closeBtn.onclick = () => modal.style.display = 'none';
+
+            // 点击弹窗外部关闭
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // 显示确认弹框
+        function showConfirmModal(letterId, callback) {
+            const modal = document.getElementById('confirmModal');
+            const confirmBtn = document.getElementById('confirmDelete');
+            const cancelBtn = document.getElementById('cancelDelete');
+
+            modal.style.display = 'block';
+
+            confirmBtn.onclick = async () => {
+                modal.style.display = 'none';
+                await callback(letterId);
+            };
+
+            cancelBtn.onclick = () => {
+                modal.style.display = 'none';
+            };
+
+            // 点击弹框外部关闭
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // 显示成功提示
+        function showSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.style.display = 'block';
+            
+            // 1.5秒后自动关闭
+            setTimeout(() => {
+                closeSuccessModal();
+            }, 1500);
+        }
+
+        // 关闭成功提示
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.style.display = 'none';
+        }
+
+        // 修改删除信件函数
+        async function deleteLetter(letterId) {
+            try {
+                const response = await fetch(`http://localhost:5000/letters/${letterId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.message) {
+                    showSuccessModal(); // 使用新的成功提示
+                    fetchLetters(); // 重新加载信件列表
+                } else {
+                    showAlert('删除失败：' + data.error);
+                }
+            } catch (error) {
+                console.error('删除失败：', error);
+                showAlert('删除失败，请重试');
+            }
+        }
+
+        // 获取并显示所有信件
+        async function fetchLetters() {
+            try {
+                const response = await fetch('http://localhost:5000/letters');
+                const letters = await response.json();
+                const container = document.getElementById('inboxContainer');
+                container.innerHTML = '';
+
+                letters.forEach(letter => {
+                    const card = document.createElement('div');
+                    card.className = `letter-card ${getEmotionClass(letter.month_emotion)}`;
+                    
+                    // 添加删除按钮
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '删除';
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation(); // 阻止事件冒泡
+                        showConfirmModal(letter.id, deleteLetter);
+                    };
+                    card.appendChild(deleteBtn);
+                    
+                    const date = document.createElement('div');
+                    date.className = 'letter-date';
+                    date.textContent = formatDate(letter.create_time);
+                    
+                    const month = document.createElement('div');
+                    month.className = 'letter-month';
+                    month.textContent = getMonthAndYear(letter.month, letter.create_time);
+
+                    const preview = document.createElement('div');
+                    preview.className = 'letter-preview';
+                    preview.textContent = letter.content.substring(0, 50) + '...';
+
+                    card.appendChild(date);
+                    card.appendChild(month);
+                    card.appendChild(preview);
+
+                    card.onclick = () => showLetter(letter);
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error('获取信件失败：', error);
+            }
+        }
+
+        // 页面加载时获取信件
+        document.addEventListener('DOMContentLoaded', fetchLetters);
+    </script>
+</body>
+</html> 

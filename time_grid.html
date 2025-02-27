@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间格</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="nav-links">
+        <a href="index.html">写日记</a>
+        <a href="diary_flow.html">时间流</a>
+        <a href="time_grid.html" class="active">时间格</a>
+        <a href="inbox.html">信箱</a>
+    </div>
+
+    <div class="grid-container" id="gridContainer">
+        <!-- 月份网格会通过 JavaScript 动态生成 -->
+    </div>
+
+    <!-- 在 body 中添加加载动画弹窗 -->
+    <div id="loadingModal" class="modal loading-modal">
+        <div class="modal-content loading-content">
+            <div class="spinner"></div>
+            <div class="loading-text">收信中...</div>
+        </div>
+    </div>
+
+    <!-- 添加成功提示弹窗 -->
+    <div id="successModal" class="modal success-modal">
+        <div class="modal-content success-content">
+            <div class="success-icon">✓</div>
+            <h3>收信成功！</h3>
+            <p id="letterContent"></p>
+        </div>
+    </div>
+
+    <!-- 添加提示弹框 -->
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <h3>日记详情</h3>
+            <p id="alertMessage"></p>
+            <div class="modal-buttons">
+                <button class="primary-btn" onclick="closeAlertModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取指定月份的日记数据
+        async function fetchMonthDiaries(year, month) {
+            try {
+                // 构建查询参数，month需要加1因为JavaScript的月份是从0开始的
+                const startDate = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+                const endDate = `${year}-${String(month + 1).padStart(2, '0')}-31`;
+                
+                const response = await fetch(`http://localhost:5000/diary?start_date=${startDate}&end_date=${endDate}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('获取日记数据失败：', error);
+                return [];
+            }
+        }
+
+        // 根据emotion值获取对应的样式类名
+        function getEmotionClass(emotion) {
+            const emotionValue = parseInt(emotion); // 确保emotion是数字
+            if (emotionValue === 2) return 'emotion-red';
+            if (emotionValue === 1) return 'emotion-blue';
+            return 'emotion-gray';
+        }
+
+        // 格式化时间为可读格式
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}分${remainingSeconds}秒`;
+        }
+
+        async function createMonthGrid(year, month) {
+            const monthNames = ["一月", "二月", "三月", "四月", "五月", "六月",
+                              "七月", "八月", "九月", "十月", "十一月", "十二月"];
+            
+            const monthGrid = document.createElement('div');
+            monthGrid.className = 'month-grid';
+            
+            // 创建标题容器，用于包含月份标题和收信按钮
+            const titleContainer = document.createElement('div');
+            titleContainer.className = 'month-title-container';
+            
+            // 添加月份标题
+            const monthTitle = document.createElement('div');
+            monthTitle.className = 'month-title';
+            monthTitle.textContent = `${monthNames[month]} ${year}年`;
+            titleContainer.appendChild(monthTitle);
+
+            // 添加收信按钮
+            const collectButton = document.createElement('button');
+            collectButton.className = 'collect-btn';
+            collectButton.innerHTML = '收信';
+
+            // 显示加载动画
+            function showLoading() {
+                document.getElementById('loadingModal').style.display = 'block';
+            }
+
+            // 隐藏加载动画
+            function hideLoading() {
+                document.getElementById('loadingModal').style.display = 'none';
+            }
+
+            // 显示成功提示
+            function showSuccess(content) {
+                const modal = document.getElementById('successModal');
+                document.getElementById('letterContent').textContent = content;
+                modal.style.display = 'block';
+                
+                // 3秒后自动关闭
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 3000);
+            }
+
+            collectButton.onclick = async () => {
+                try {
+                    showLoading(); // 显示加载动画
+
+                    const response = await fetch('http://localhost:5000/collect_month', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            year: year,
+                            month: month
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    hideLoading(); // 隐藏加载动画
+
+                    if (response.ok) {
+                        showSuccess(data.content); // 显示成功提示和回信内容
+                    } else {
+                        alert('收信失败：' + (data.error || '未知错误'));
+                    }
+                } catch (error) {
+                    hideLoading(); // 隐藏加载动画
+                    console.error('收信失败：', error);
+                    alert('收信失败，请重试');
+                }
+            };
+            titleContainer.appendChild(collectButton);
+
+            monthGrid.appendChild(titleContainer);
+
+            // 创建日期网格
+            const daysGrid = document.createElement('div');
+            daysGrid.className = 'days-grid';
+
+            // 添加星期标题
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            weekdays.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = day;
+                daysGrid.appendChild(dayHeader);
+            });
+
+            // 获取月份的第一天是星期几
+            const firstDay = new Date(year, month, 1).getDay();
+            // 获取月份的总天数
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // 获取该月的日记数据
+            const diaries = await fetchMonthDiaries(year, month);
+            // 将日记数据转换为以日期为键的映射，这次加入月份检查
+            const diaryMap = new Map(
+                diaries
+                    .filter(diary => {
+                        const date = new Date(diary.created_time);
+                        // 确保日记确实属于当前月份
+                        return date.getFullYear() === year && date.getMonth() === month;
+                    })
+                    .map(diary => {
+                        const date = new Date(diary.created_time);
+                        return [date.getDate(), diary];
+                    })
+            );
+
+            // 添加空白格子
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'day-cell empty';
+                daysGrid.appendChild(emptyDay);
+            }
+
+            // 添加日期格子
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                dayCell.textContent = day;
+                
+                // 如果有日记，添加对应的样式
+                const diary = diaryMap.get(day);
+                if (diary) {
+                    dayCell.classList.add('has-diary');
+                    dayCell.classList.add(getEmotionClass(diary.emotion));
+                    
+                    // 添加点击事件，显示日记内容
+                    dayCell.addEventListener('click', () => {
+                        const date = new Date(diary.created_time);
+                        const formattedDate = date.toLocaleString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        showAlert(
+                            `创建时间：${formattedDate}\n` +
+                            `写作时长：${formatTime(diary.time)}\n` +
+                            `内容：${diary.content}\n` +
+                            (diary.agent_content ? `AI回复：${diary.agent_content}` : '')
+                        );
+                    });
+                }
+                
+                daysGrid.appendChild(dayCell);
+            }
+
+            monthGrid.appendChild(daysGrid);
+            return monthGrid;
+        }
+
+        async function loadMonths() {
+            const container = document.getElementById('gridContainer');
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+
+            // 清空容器
+            container.innerHTML = '';
+
+            // 加载当前月份和前几个月（倒序）
+            for (let i = 0; i <= 4; i++) {
+                let year = currentYear;
+                let month = currentMonth - i;
+
+                // 处理跨年的情况
+                if (month < 0) {
+                    month += 12;
+                    year -= 1;
+                }
+
+                const monthGrid = await createMonthGrid(year, month);
+                container.appendChild(monthGrid);
+            }
+        }
+
+        // 页面加载时初始化月份网格
+        document.addEventListener('DOMContentLoaded', loadMonths);
+
+        // 添加滚动加载更多月份的功能
+        let loading = false;
+        window.addEventListener('scroll', async () => {
+            if (loading) return;
+
+            const lastMonth = document.querySelector('.month-grid:last-child');
+            const lastMonthBottom = lastMonth.getBoundingClientRect().bottom;
+
+            if (lastMonthBottom < window.innerHeight + 300) {
+                loading = true;
+                
+                // 获取最后一个月份的日期信息
+                const monthsLoaded = document.querySelectorAll('.month-grid').length;
+                const now = new Date();
+                const date = new Date(now.getFullYear(), now.getMonth() - monthsLoaded);
+                
+                const monthGrid = await createMonthGrid(date.getFullYear(), date.getMonth());
+                document.getElementById('gridContainer').appendChild(monthGrid);
+                
+                loading = false;
+            }
+        });
+
+        // 显示提示框
+        function showAlert(message) {
+            const modal = document.getElementById('alertModal');
+            const messageEl = document.getElementById('alertMessage');
+            messageEl.textContent = message;
+            modal.style.display = 'block';
+        }
+
+        // 关闭提示框
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            modal.style.display = 'none';
+        }
+    </script>
+</body>
+</html> 

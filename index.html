@@ -10,8 +10,8 @@
     <div class="nav-links">
         <a href="index.html" class="active">写日记</a>
         <a href="diary_flow.html">时间流</a>
-        <a href="index.html">时间格</a>
-        <a href="index.html">信箱</a>
+        <a href="time_grid.html">时间格</a>
+        <a href="inbox.html">信箱</a>
     </div>
 
     <div class="timer-container">
@@ -23,6 +23,33 @@
         <textarea id="content" disabled maxlength="2000" placeholder="点击开始写作后在这里输入文字..."></textarea>
         <div id="wordCount">0/2000</div>
         <button id="submitBtn">提交</button>
+    </div>
+
+    <!-- 在 body 中添加加载动画弹窗 -->
+    <div id="loadingModal" class="modal loading-modal">
+        <div class="modal-content loading-content">
+            <div class="spinner"></div>
+            <div class="loading-text">保存中...</div>
+        </div>
+    </div>
+
+    <!-- 添加成功提示弹窗 -->
+    <div id="successModal" class="modal success-modal">
+        <div class="modal-content success-content">
+            <div class="success-icon">✓</div>
+            <h3>保存成功！</h3>
+        </div>
+    </div>
+
+    <!-- 添加提示弹框 -->
+    <div id="alertModal" class="modal">
+        <div class="modal-content">
+            <h3>提示</h3>
+            <p id="alertMessage"></p>
+            <div class="modal-buttons">
+                <button class="primary-btn" onclick="closeAlertModal()">确定</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -87,15 +114,55 @@
             }
         });
 
-        startBtn.addEventListener('click', startWriting);
+        // 显示加载动画
+        function showLoading() {
+            document.getElementById('loadingModal').style.display = 'block';
+        }
 
-        submitBtn.addEventListener('click', function() {
-            if (textarea.value.trim()) {
-                stopWriting();
-                const content = textarea.value.trim();
-                const writingDuration = elapsedTime; // 使用累计的秒数
+        // 隐藏加载动画
+        function hideLoading() {
+            document.getElementById('loadingModal').style.display = 'none';
+        }
 
-                fetch('http://localhost:5000/submit', {
+        // 显示成功提示
+        function showSuccess() {
+            const modal = document.getElementById('successModal');
+            modal.style.display = 'block';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                window.location.reload(); // 刷新页面
+            }, 1500);
+        }
+
+        // 显示提示框
+        function showAlert(message) {
+            const modal = document.getElementById('alertModal');
+            const messageEl = document.getElementById('alertMessage');
+            messageEl.textContent = message;
+            modal.style.display = 'block';
+        }
+
+        // 关闭提示框
+        function closeAlertModal() {
+            const modal = document.getElementById('alertModal');
+            modal.style.display = 'none';
+        }
+
+        // 修改提交函数
+        async function submitDiary() {
+            if (!textarea.value.trim()) {
+                alert('请填写日记内容');
+                return;
+            }
+            
+            stopWriting();
+            const content = textarea.value.trim();
+            const writingDuration = elapsedTime; // 使用累计的秒数
+
+            try {
+                showLoading(); // 显示加载动画
+
+                const response = await fetch('http://localhost:5000/submit', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -104,20 +171,73 @@
                         content: content,
                         time: writingDuration
                     })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                        resetWriting();
-                    } else {
-                        alert('保存失败：' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('提交失败：', error);
-                    alert('提交失败，请重试');
                 });
+
+                const data = await response.json();
+                
+                hideLoading(); // 隐藏加载动画
+
+                if (response.ok) {
+                    showSuccess(); // 显示成功提示
+                    resetWriting(); // 重置写作状态
+                } else {
+                    alert('保存失败：' + (data.error || '未知错误'));
+                }
+            } catch (error) {
+                hideLoading(); // 隐藏加载动画
+                console.error('提交失败：', error);
+                alert('提交失败，请重试');
+            }
+        }
+
+        submitBtn.addEventListener('click', submitDiary);
+
+        // 修改检查写作状态的函数
+        async function checkCanWrite() {
+            try {
+                const response = await fetch('http://localhost:5000/check_today');
+                const data = await response.json();
+                
+                if (!data.can_write) {
+                    startBtn.disabled = true;
+                    startBtn.classList.add('disabled');
+                    
+                    // 计算并显示剩余时间
+                    const nextTime = new Date(data.next_time);
+                    const now = new Date();
+                    const hours = Math.floor((nextTime - now) / (1000 * 60 * 60));
+                    const minutes = Math.floor(((nextTime - now) % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    showAlert(`今天已经写过日记了\n下次可写作时间：明天0点\n距离下次写作还有${hours}小时${minutes}分钟`);
+                } else {
+                    startBtn.disabled = false;
+                    startBtn.classList.remove('disabled');
+                }
+            } catch (error) {
+                console.error('检查写作状态失败：', error);
+            }
+        }
+
+        // 页面加载时检查
+        document.addEventListener('DOMContentLoaded', checkCanWrite);
+
+        // 每分钟检查一次
+        setInterval(checkCanWrite, 60000);
+
+        // 修改开始写作按钮的点击事件
+        startBtn.addEventListener('click', async () => {
+            const response = await fetch('http://localhost:5000/check_today');
+            const data = await response.json();
+            
+            if (data.can_write) {
+                startWriting();
+            } else {
+                const nextTime = new Date(data.next_time);
+                const now = new Date();
+                const hours = Math.floor((nextTime - now) / (1000 * 60 * 60));
+                const minutes = Math.floor(((nextTime - now) % (1000 * 60 * 60)) / (1000 * 60));
+                
+                showAlert(`今天已经写过日记了\n下次可写作时间：明天0点\n距离下次写作还有${hours}小时${minutes}分钟`);
             }
         });
     </script>
